@@ -41,8 +41,7 @@ namespace CustomIdentityWEB
                .AddFacebook(facebookOptions =>
                {
                    // quick for now
-                   facebookOptions.AppId = "1588121948019923";
-                   facebookOptions.AppSecret = "4551f6292222a6c650384d43aefc697e";
+                   
                });
 
             services.AddControllersWithViews();
