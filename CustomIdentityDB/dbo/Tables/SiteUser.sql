@@ -11,6 +11,9 @@
     [PhoneNumber]          NVARCHAR (50)  NULL,
     [PhoneNumberConfirmed] BIT            NOT NULL,
     [TwoFactorEnabled]     BIT            NOT NULL,
+    [Created]              DATETIME       NOT NULL,
     CONSTRAINT [PK__Applicat__3214EC079083AE7D] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 

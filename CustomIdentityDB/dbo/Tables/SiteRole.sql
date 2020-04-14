@@ -3,8 +3,11 @@
     [Name]           NVARCHAR (256) NOT NULL,
     [NormalizedName] NVARCHAR (256) NOT NULL,
     [Description]    NVARCHAR (256) NOT NULL,
-    PRIMARY KEY CLUSTERED ([Id] ASC)
+    [Created]        DATETIME       NOT NULL,
+    CONSTRAINT [PK__SiteRole__3214EC076D185A2A] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 
 
 GO

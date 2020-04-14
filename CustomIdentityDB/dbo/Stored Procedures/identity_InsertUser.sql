@@ -11,7 +11,8 @@ CREATE PROCEDURE [dbo].[identity_InsertUser]
 @PasswordHash nvarchar(MAX),
 @PhoneNumber nvarchar(50),
 @PhoneNumberConfirmed bit,
-@TwoFactorEnabled bit
+@TwoFactorEnabled bit,
+@Created datetime
 
 AS
 BEGIN
@@ -29,7 +30,8 @@ INSERT INTO [SiteUser]
     [PasswordHash],
     [PhoneNumber], 
     [PhoneNumberConfirmed], 
-    [TwoFactorEnabled]
+    [TwoFactorEnabled],
+	[Created]
  )
 
  VALUES
@@ -44,7 +46,8 @@ INSERT INTO [SiteUser]
 	@PasswordHash,
 	@PhoneNumber,
 	@PhoneNumberConfirmed,
-	@TwoFactorEnabled
+	@TwoFactorEnabled,
+	@Created
  )
 
 
