@@ -1,5 +1,3 @@
-using System;
-
 namespace CustomIdentityWEB.ViewModels
 {
     public class ErrorViewModel

@@ -1,12 +1,9 @@
 ﻿using IdentityManager.DAL;
 using IdentityManager.Entities.Custom;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,9 +20,18 @@ namespace IdentityManager.Stores
     {
         private UserService _userService { get; set; }
 
-        public UserStore(UserService userService)
+        private RoleService _roleService { get; set; }
+
+        private UserRoleService _userRoleService { get; set; }
+
+        private ExternalLoginService _externalLoginService { get; set; }
+
+        public UserStore(UserService userService, RoleService roleService, UserRoleService userRoleService, ExternalLoginService externalLoginService)
         {
             _userService = userService;
+            _roleService = roleService;
+            _externalLoginService = externalLoginService;
+            _userRoleService = userRoleService;
         }
 
         public IQueryable<SiteUser> Users => _userService.GetUserList();
@@ -41,14 +47,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    await connection.ExecuteAsync($"DELETE FROM [SiteUser] WHERE [Id] = @{nameof(SiteUser.Id)}", user);
-            //}
-
-            return IdentityResult.Success;
+            return await _userService.DeleteUser(user, cancellationToken);
         }
 
         public async Task<SiteUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
@@ -172,25 +171,28 @@ namespace IdentityManager.Stores
             return Task.FromResult(user.TwoFactorEnabled);
         }
 
+        public void Dispose()
+        {
+            // Nothing to dispose.
+        }
+
         #region Roles
 
         public async Task AddToRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    var normalizedName = roleName.ToUpper();
-            //    var roleId = await connection.ExecuteScalarAsync<int?>($"SELECT [Id] FROM [SiteRole] WHERE [NormalizedName] = @{nameof(normalizedName)}", new { normalizedName });
-            //    if (!roleId.HasValue)
-            //        roleId = await connection.ExecuteAsync($"INSERT INTO [SiteRole]([Name], [NormalizedName]) VALUES(@{nameof(roleName)}, @{nameof(normalizedName)})",
-            //            new { roleName, normalizedName });
+            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
-            //    await connection.ExecuteAsync($"IF NOT EXISTS(SELECT 1 FROM [SiteUserRole] WHERE [UserId] = @userId AND [RoleId] = @{nameof(roleId)}) " +
-            //        $"INSERT INTO [SiteUserRole]([UserId], [RoleId]) VALUES(@userId, @{nameof(roleId)})",
-            //        new { userId = user.Id, roleId });
-            //}
+            if (role == null)
+            {
+                // No role found, so create one...
+                //        roleId = await connection.ExecuteAsync($"INSERT INTO [SiteRole]([Name], [NormalizedName]) VALUES(@{nameof(roleName)}, @{nameof(normalizedName)})",
+                //            new { roleName, normalizedName });
+                throw new Exception("No Role Found by Name!");
+            }
+
+            await _userRoleService.AddUserToRoleAsync(user.Id, role.Id, cancellationToken);
         }
 
         public async Task RemoveFromRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
@@ -210,18 +212,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var jack = new List<string>();
-
-            return jack;
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    var queryResults = await connection.QueryAsync<string>("SELECT r.[Name] FROM [SiteRole] r INNER JOIN [SiteUserRole] ur ON ur.[RoleId] = r.Id " +
-            //        "WHERE ur.UserId = @userId", new { userId = user.Id });
-
-            //    return queryResults.ToList();
-            //}
+            return await _roleService.GetRolesByUserIdAsync(user, cancellationToken);
         }
 
         public async Task<bool> IsInRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
@@ -258,67 +249,27 @@ namespace IdentityManager.Stores
 
         #endregion
 
-        public void Dispose()
-        {
-            // Nothing to dispose.
-        }
-
         #region External Login
 
         public async Task AddLoginAsync(SiteUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-
-            //    await connection.ExecuteAsync($@"INSERT INTO [ExternalLogin] 
-            //    ([LoginProvider], 
-            //     [ProviderKey], 
-            //     [ProviderDisplayName],
-            //     [UserID],
-            //     [Created])
-
-            //     VALUES (@{nameof(login.LoginProvider)},
-            //            @{nameof(login.ProviderKey)}, 
-            //            @{nameof(login.ProviderDisplayName)},
-            //            @{nameof(user.Id)}, 
-            //            @{nameof(DateTime.Now)});",
-
-            //            new
-            //            {
-            //                login.LoginProvider,
-            //                login.ProviderKey,
-            //                login.ProviderDisplayName,
-            //                user.Id,
-            //                DateTime.Now
-            //            });
-            //}
+            await _externalLoginService.CreateExternalLoginUser(user, login, cancellationToken);
         }
 
         public async Task<SiteUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
+            int UserId = await _externalLoginService.GetUserIdByLoginProvider(loginProvider, providerKey, cancellationToken);
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
+            if (UserId == 0)
+            {
+                return null;
+            }
 
-            //    var id = await connection.QuerySingleOrDefaultAsync<int>($@"SELECT UserID FROM [ExternalLogin]
-            //        WHERE [LoginProvider] = @{nameof(loginProvider)}
-            //        AND [ProviderKey] = @{nameof(providerKey)}", new { loginProvider, providerKey });
-
-
-
-            //    var user = await FindByIdAsync(id.ToString(), cancellationToken);
-
-
-
-            //    return user;
-            //}
+            return await _userService.FindById(UserId.ToString(), cancellationToken);
         }
 
         public Task<IList<UserLoginInfo>> GetLoginsAsync(SiteUser user, CancellationToken cancellationToken)
@@ -328,6 +279,7 @@ namespace IdentityManager.Stores
 
         public Task RemoveLoginAsync(SiteUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
+            // Should be called when deleting a user that was created from an external source
             throw new NotImplementedException();
         }
 

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,7 +57,8 @@ namespace IdentityManager.DAL
                                 EmailConfirmed = bool.Parse(rdr["EmailConfirmed"].ToString()),
                                 PhoneNumber = rdr["PhoneNumber"].ToString(),
                                 PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
-                                TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString())
+                                TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
+                                Created = DateTime.Parse(rdr["Created"].ToString())
                             };
 
                             list.Add(su);
@@ -101,10 +101,11 @@ namespace IdentityManager.DAL
                         cmd.Parameters.AddWithValue("@Email", user.Email);
                         cmd.Parameters.AddWithValue("@NormalizedEmail", user.NormalizedEmail);
                         cmd.Parameters.AddWithValue("@EmailConfirmed", user.EmailConfirmed);
-                        cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+                        cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash ?? "");
                         cmd.Parameters.AddWithValue("@PhoneNumber", user.PhoneNumber ?? "");
                         cmd.Parameters.AddWithValue("@PhoneNumberConfirmed", user.PhoneNumberConfirmed);
                         cmd.Parameters.AddWithValue("@TwoFactorEnabled", user.TwoFactorEnabled);
+                        cmd.Parameters.AddWithValue("@Created", DateTime.Now);
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -203,7 +204,8 @@ namespace IdentityManager.DAL
                                     PasswordHash = rdr["PasswordHash"].ToString(),
                                     PhoneNumber = rdr["PhoneNumber"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
-                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString())
+                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
+                                    Created = DateTime.Parse(rdr["Created"].ToString())
                                 };
                             }
                             return user;
@@ -257,7 +259,8 @@ namespace IdentityManager.DAL
                                     PhoneNumber = rdr["PhoneNumber"].ToString(),
                                     PasswordHash = rdr["PasswordHash"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
-                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString())
+                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
+                                    Created = DateTime.Parse(rdr["Created"].ToString())
                                 };
                             }
                             return user;
@@ -311,7 +314,8 @@ namespace IdentityManager.DAL
                                     EmailConfirmed = bool.Parse(rdr["EmailConfirmed"].ToString()),
                                     PhoneNumber = rdr["PhoneNumber"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
-                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString())
+                                    TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
+                                    Created = DateTime.Parse(rdr["Created"].ToString())
                                 };
                             }
                             return user;

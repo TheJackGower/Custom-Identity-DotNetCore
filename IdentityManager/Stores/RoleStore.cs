@@ -1,10 +1,6 @@
 ﻿using IdentityManager.DAL;
 using IdentityManager.Entities.Custom;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -94,19 +90,13 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    return await connection.QuerySingleOrDefaultAsync<SiteRole>($@"SELECT * FROM [SiteRole]
-            //        WHERE [Id] = @{nameof(roleId)}", new { roleId });
-            //}
+            return await _roleService.FindByIdAsync(roleId, cancellationToken);
         }
 
         public async Task<SiteRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _roleService.FindByNameAsync(normalizedRoleName);
+            return await _roleService.FindByNameAsync(normalizedRoleName, cancellationToken);
         }
 
         public void Dispose()

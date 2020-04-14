@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using CustomIdentityWEB.ViewModels;
 using CustomIdentityWEB.ViewModels.AccountViewModels;
 using CustomIdentityWEB.Services;
 using IdentityManager.Entities.Custom;
@@ -319,6 +314,9 @@ namespace CustomIdentityWEB.Controllers
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    // Refresh User
+                    user = await _userManager.FindByEmailAsync(user.NormalizedEmail);
+
                     // Add to external login table for reference
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
