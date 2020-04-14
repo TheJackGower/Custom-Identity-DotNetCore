@@ -23,13 +23,13 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync(cancellationToken);
-                role.Id = await connection.QuerySingleAsync<int>($@"INSERT INTO [SiteRole] ([Name], [NormalizedName])
-                    VALUES (@{nameof(SiteRole.Name)}, @{nameof(SiteRole.NormalizedName)});
-                    SELECT CAST(SCOPE_IDENTITY() as int)", role);
-            }
+            //using (var connection = new SqlConnection(_connectionString))
+            //{
+            //    await connection.OpenAsync(cancellationToken);
+            //    role.Id = await connection.QuerySingleAsync<int>($@"INSERT INTO [SiteRole] ([Name], [NormalizedName])
+            //        VALUES (@{nameof(SiteRole.Name)}, @{nameof(SiteRole.NormalizedName)});
+            //        SELECT CAST(SCOPE_IDENTITY() as int)", role);
+            //}
 
             return IdentityResult.Success;
         }
@@ -38,14 +38,14 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync(cancellationToken);
-                await connection.ExecuteAsync($@"UPDATE [SiteRole] SET
-                    [Name] = @{nameof(SiteRole.Name)},
-                    [NormalizedName] = @{nameof(SiteRole.NormalizedName)}
-                    WHERE [Id] = @{nameof(SiteRole.Id)}", role);
-            }
+            //using (var connection = new SqlConnection(_connectionString))
+            //{
+            //    await connection.OpenAsync(cancellationToken);
+            //    await connection.ExecuteAsync($@"UPDATE [SiteRole] SET
+            //        [Name] = @{nameof(SiteRole.Name)},
+            //        [NormalizedName] = @{nameof(SiteRole.NormalizedName)}
+            //        WHERE [Id] = @{nameof(SiteRole.Id)}", role);
+            //}
 
             return IdentityResult.Success;
         }
@@ -54,11 +54,11 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync(cancellationToken);
-                await connection.ExecuteAsync($"DELETE FROM [SiteRole] WHERE [Id] = @{nameof(SiteRole.Id)}", role);
-            }
+            //using (var connection = new SqlConnection(_connectionString))
+            //{
+            //    await connection.OpenAsync(cancellationToken);
+            //    await connection.ExecuteAsync($"DELETE FROM [SiteRole] WHERE [Id] = @{nameof(SiteRole.Id)}", role);
+            //}
 
             return IdentityResult.Success;
         }
@@ -94,12 +94,13 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync(cancellationToken);
-                return await connection.QuerySingleOrDefaultAsync<SiteRole>($@"SELECT * FROM [SiteRole]
-                    WHERE [Id] = @{nameof(roleId)}", new { roleId });
-            }
+            return null;
+            //using (var connection = new SqlConnection(_connectionString))
+            //{
+            //    await connection.OpenAsync(cancellationToken);
+            //    return await connection.QuerySingleOrDefaultAsync<SiteRole>($@"SELECT * FROM [SiteRole]
+            //        WHERE [Id] = @{nameof(roleId)}", new { roleId });
+            //}
         }
 
         public async Task<SiteRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)

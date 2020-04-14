@@ -28,9 +28,9 @@ namespace IdentityManager.DAL
             using (var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
                 connection.Open();
-
-                return await connection.QuerySingleOrDefaultAsync<SiteRole>($@"SELECT * FROM [SiteRole]
-                    WHERE [NormalizedName] = @{nameof(normalizedRoleName)}", new { normalizedRoleName });
+                return null;
+                //return await connection.QuerySingleOrDefaultAsync<SiteRole>($@"SELECT * FROM [SiteRole]
+                //    WHERE [NormalizedName] = @{nameof(normalizedRoleName)}", new { normalizedRoleName });
             }
         }
 
