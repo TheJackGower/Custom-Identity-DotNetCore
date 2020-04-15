@@ -1,4 +1,5 @@
 ﻿using IdentityManager.Entities.Custom;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,115 @@ namespace IdentityManager.DAL
         public RoleService(IConfiguration config)
         {
             _config = config;
+        }
+
+        /// <summary>
+        /// Create new Role
+        /// Possbible check needed to see if exists?
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IdentityResult> CreateAsync(SiteRole role, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    await conn.OpenAsync(cancellationToken);
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "identity_InsertRole";
+
+                        cmd.Parameters.AddWithValue("@Name", role.Name);
+                        cmd.Parameters.AddWithValue("@NormalizedName", role.NormalizedName);
+                        cmd.Parameters.AddWithValue("@Description", role.Description ?? "");
+                        cmd.Parameters.AddWithValue("@Created", DateTime.Now);
+
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+                        return IdentityResult.Success;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return IdentityResult.Failed(new IdentityError { Code = ex.HResult.ToString(), Description = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Update existing Role
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IdentityResult> UpdateAsync(SiteRole role, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    await conn.OpenAsync(cancellationToken);
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "identity_UpdateRole";
+
+                        cmd.Parameters.AddWithValue("@Id", role.Id);
+                        cmd.Parameters.AddWithValue("@Name", role.Name);
+                        cmd.Parameters.AddWithValue("@NormalizedName", role.NormalizedName);
+                        cmd.Parameters.AddWithValue("@Description", role.Description ?? "");
+
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+                        return IdentityResult.Success;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return IdentityResult.Failed(new IdentityError { Code = ex.HResult.ToString(), Description = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Delete Role
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IdentityResult> DeleteAsync(SiteRole role, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    await conn.OpenAsync(cancellationToken);
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "identity_DeleteRole";
+
+                        cmd.Parameters.AddWithValue("@Id", role.Id);
+
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+                        return IdentityResult.Success;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return IdentityResult.Failed(new IdentityError { Code = ex.HResult.ToString(), Description = ex.Message });
+            }
         }
 
         /// <summary>
@@ -144,14 +254,12 @@ namespace IdentityManager.DAL
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception("An Error Occurred!");
+                throw new Exception(ex.Message);
             }
 
             return list;
         }
-
-
     }
 }

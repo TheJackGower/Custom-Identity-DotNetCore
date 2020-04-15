@@ -66,9 +66,9 @@ namespace IdentityManager.DAL
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception("An Error Occurred!");
+                throw new Exception(ex.Message);
             }
 
             return list.AsQueryable();
@@ -107,7 +107,7 @@ namespace IdentityManager.DAL
                         cmd.Parameters.AddWithValue("@TwoFactorEnabled", user.TwoFactorEnabled);
                         cmd.Parameters.AddWithValue("@Created", DateTime.Now);
 
-                        await cmd.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
 
                         return IdentityResult.Success;
                     }
@@ -152,7 +152,7 @@ namespace IdentityManager.DAL
                         cmd.Parameters.AddWithValue("@PhoneNumberConfirmed", user.PhoneNumberConfirmed);
                         cmd.Parameters.AddWithValue("@TwoFactorEnabled", user.TwoFactorEnabled);
 
-                        await cmd.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
 
                         return IdentityResult.Success;
                     }
@@ -213,9 +213,9 @@ namespace IdentityManager.DAL
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -268,9 +268,9 @@ namespace IdentityManager.DAL
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -323,9 +323,9 @@ namespace IdentityManager.DAL
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -351,7 +351,7 @@ namespace IdentityManager.DAL
 
                         cmd.Parameters.AddWithValue("@Id", user.Id);
 
-                        await cmd.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
 
                         return IdentityResult.Success;
                     }

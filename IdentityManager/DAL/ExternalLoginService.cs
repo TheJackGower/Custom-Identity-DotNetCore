@@ -44,12 +44,13 @@ namespace IdentityManager.DAL
                         cmd.Parameters.AddWithValue("@ProviderDisplayName", login.ProviderDisplayName);
                         cmd.Parameters.AddWithValue("@Created", DateTime.Now);
 
-                        await cmd.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync(cancellationToken);
                     }
                 }
             }
             catch (Exception ex)
             {
+                throw new Exception(ex.Message);
             }
         }
 
@@ -83,9 +84,9 @@ namespace IdentityManager.DAL
                 }
                 return UserId;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 

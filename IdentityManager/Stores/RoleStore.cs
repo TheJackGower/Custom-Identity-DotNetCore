@@ -19,44 +19,21 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    role.Id = await connection.QuerySingleAsync<int>($@"INSERT INTO [SiteRole] ([Name], [NormalizedName])
-            //        VALUES (@{nameof(SiteRole.Name)}, @{nameof(SiteRole.NormalizedName)});
-            //        SELECT CAST(SCOPE_IDENTITY() as int)", role);
-            //}
-
-            return IdentityResult.Success;
+            return await _roleService.CreateAsync(role, cancellationToken);
         }
 
         public async Task<IdentityResult> UpdateAsync(SiteRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    await connection.ExecuteAsync($@"UPDATE [SiteRole] SET
-            //        [Name] = @{nameof(SiteRole.Name)},
-            //        [NormalizedName] = @{nameof(SiteRole.NormalizedName)}
-            //        WHERE [Id] = @{nameof(SiteRole.Id)}", role);
-            //}
-
-            return IdentityResult.Success;
+            return await _roleService.UpdateAsync(role, cancellationToken);
         }
 
         public async Task<IdentityResult> DeleteAsync(SiteRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    await connection.ExecuteAsync($"DELETE FROM [SiteRole] WHERE [Id] = @{nameof(SiteRole.Id)}", role);
-            //}
-
-            return IdentityResult.Success;
+            return await _roleService.DeleteAsync(role, cancellationToken);
         }
 
         public Task<string> GetRoleIdAsync(SiteRole role, CancellationToken cancellationToken)

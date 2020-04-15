@@ -199,6 +199,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Retrieve role to get id
             var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
             if (role == null)
@@ -206,7 +207,7 @@ namespace IdentityManager.Stores
                 throw new Exception($"Couldn't retrieve role with name - {role}");
             }
 
-            //        await connection.ExecuteAsync($"DELETE FROM [SiteUserRole] WHERE [UserId] = @userId AND [RoleId] = @{nameof(roleId)}", new { userId = user.Id, roleId });
+            await _userRoleService.RemoveUserFromRole(user.Id, role.Id, cancellationToken);
         }
 
         public async Task<IList<string>> GetRolesAsync(SiteUser user, CancellationToken cancellationToken)
@@ -220,32 +221,22 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return false;
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    var roleId = await connection.ExecuteScalarAsync<int?>("SELECT [Id] FROM [SiteRole] WHERE [NormalizedName] = @normalizedName", new { normalizedName = roleName.ToUpper() });
-            //    if (roleId == default(int)) return false;
-            //    var matchingRoles = await connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM [SiteUserRole] WHERE [UserId] = @userId AND [RoleId] = @{nameof(roleId)}",
-            //        new { userId = user.Id, roleId });
+            // Retrieve role to get id
+            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
-            //    return matchingRoles > 0;
-            //}
+            if (role == null)
+            {
+                return false;
+            }
+
+            return await _userRoleService.IsUserInRoleAsync(user.Id, role.Id, cancellationToken);
         }
 
         public async Task<IList<SiteUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return null;
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    var queryResults = await connection.QueryAsync<SiteUser>("SELECT u.* FROM [SiteUser] u " +
-            //        "INNER JOIN [SiteUserRole] ur ON ur.[UserId] = u.[Id] INNER JOIN [SiteRole] r ON r.[Id] = ur.[RoleId] WHERE r.[NormalizedName] = @normalizedName",
-            //        new { normalizedName = roleName.ToUpper() });
-
-            //    return queryResults.ToList();
-            //}
+            return await _userRoleService.GetUsersInRoleAsync(roleName.ToUpper(), cancellationToken);
         }
 
         #endregion
