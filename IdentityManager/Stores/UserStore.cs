@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 namespace IdentityManager.Stores
 {
     public class UserStore : IUserStore<SiteUser>,
-       IUserEmailStore<SiteUser>,
-       IUserPhoneNumberStore<SiteUser>,
-       IUserTwoFactorStore<SiteUser>,
-       IUserPasswordStore<SiteUser>,
-       IUserRoleStore<SiteUser>,
-       IUserLoginStore<SiteUser>,
-       IQueryableUserStore<SiteUser>
+                             IUserEmailStore<SiteUser>,
+                             IUserPhoneNumberStore<SiteUser>,
+                             IUserTwoFactorStore<SiteUser>,
+                             IUserPasswordStore<SiteUser>,
+                             IUserRoleStore<SiteUser>,
+                             IUserLoginStore<SiteUser>,
+                             IQueryableUserStore<SiteUser>
     {
         private UserService _userService { get; set; }
 
@@ -199,13 +199,14 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    var roleId = await connection.ExecuteScalarAsync<int?>("SELECT [Id] FROM [SiteRole] WHERE [NormalizedName] = @normalizedName", new { normalizedName = roleName.ToUpper() });
-            //    if (!roleId.HasValue)
+            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
+
+            if (role == null)
+            {
+                throw new Exception($"Couldn't retrieve role with name - {role}");
+            }
+
             //        await connection.ExecuteAsync($"DELETE FROM [SiteUserRole] WHERE [UserId] = @userId AND [RoleId] = @{nameof(roleId)}", new { userId = user.Id, roleId });
-            //}
         }
 
         public async Task<IList<string>> GetRolesAsync(SiteUser user, CancellationToken cancellationToken)
