@@ -249,7 +249,7 @@ namespace IdentityManager.DAL
 
                         while (rdr.Read())
                         {
-                            list.Add(rdr["RoleName"].ToString());
+                            list.Add(rdr["Name"].ToString());
                         }
                     }
                 }

@@ -205,7 +205,11 @@ namespace IdentityManager.DAL
                                     PhoneNumber = rdr["PhoneNumber"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
                                     TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
-                                    Created = DateTime.Parse(rdr["Created"].ToString())
+                                    Created = DateTime.Parse(rdr["Created"].ToString()),
+                                    Facebook = rdr["Facebook"].ToString(),
+                                    Twitter = rdr["Twitter"].ToString(),
+                                    Instagram = rdr["Instagram"].ToString(),
+                                    Website = rdr["Website"].ToString()
                                 };
                             }
                             return user;
@@ -260,7 +264,11 @@ namespace IdentityManager.DAL
                                     PasswordHash = rdr["PasswordHash"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
                                     TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
-                                    Created = DateTime.Parse(rdr["Created"].ToString())
+                                    Created = DateTime.Parse(rdr["Created"].ToString()),
+                                    Facebook = rdr["Facebook"].ToString(),
+                                    Twitter = rdr["Twitter"].ToString(),
+                                    Instagram = rdr["Instagram"].ToString(),
+                                    Website = rdr["Website"].ToString()
                                 };
                             }
                             return user;
@@ -315,7 +323,11 @@ namespace IdentityManager.DAL
                                     PhoneNumber = rdr["PhoneNumber"].ToString(),
                                     PhoneNumberConfirmed = bool.Parse(rdr["PhoneNumberConfirmed"].ToString()),
                                     TwoFactorEnabled = bool.Parse(rdr["TwoFactorEnabled"].ToString()),
-                                    Created = DateTime.Parse(rdr["Created"].ToString())
+                                    Created = DateTime.Parse(rdr["Created"].ToString()),
+                                    Facebook = rdr["Facebook"].ToString(),
+                                    Twitter = rdr["Twitter"].ToString(),
+                                    Instagram = rdr["Instagram"].ToString(),
+                                    Website = rdr["Website"].ToString()
                                 };
                             }
                             return user;

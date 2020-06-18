@@ -1,4 +1,5 @@
 ﻿using IdentityManager.Entities.Shared;
+using System.ComponentModel.DataAnnotations;
 
 namespace IdentityManager.Entities.Custom
 {
@@ -7,7 +8,10 @@ namespace IdentityManager.Entities.Custom
         /// <summary>
         /// User identifier. No longer using Guids as uneeded memory is consumed in creation
         /// </summary>
+        [Display(Name = "ID")]
         public int Id { get; set; }
+
+        public string DisplayName => $"{Forename} {Surname}";
 
         /// <summary>
         /// Typically their email
@@ -33,5 +37,13 @@ namespace IdentityManager.Entities.Custom
         public bool PhoneNumberConfirmed { get; set; }
 
         public bool TwoFactorEnabled { get; set; }
+
+        public string Facebook { get; set; }
+
+        public string Twitter { get; set; }
+
+        public string Instagram { get; set; }
+
+        public string Website { get; set; }
     }
 }
