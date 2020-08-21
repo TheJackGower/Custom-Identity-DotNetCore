@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomNetCoreIdentity.Identity", "IdentityManager\CustomNetCoreIdentity.Identity.csproj", "{000F13EE-DB38-40A5-A064-136FE176D4FF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomNetCoreIdentity.MVC", "CustomNetCoreIdentity.MVC\CustomNetCoreIdentity.MVC.csproj", "{CFECAFED-5B4C-434E-8462-39EF9F2F2EAF}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "CustomNetCoreIdentity.Database", "CustomIdentityDB\CustomNetCoreIdentity.Database.sqlproj", "{791DDFC9-67BF-4295-8F45-B1792E4824D5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomNetCoreIdentity.Domain", "CustomNetCoreIdentity.Domain\CustomNetCoreIdentity.Domain.csproj", "{7150EA14-C7AD-44E8-A8CB-7E4F81E21DA2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomNetCoreIdentity.Infrastructure", "CustomNetCoreIdentity.Infrastructure\CustomNetCoreIdentity.Infrastructure.csproj", "{6025C8A7-49C5-4C79-8339-A2359C43B0B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomNetCoreIdentity.Application", "CustomNetCoreIdentity.Application\CustomNetCoreIdentity.Application.csproj", "{D86C13C2-A46F-4F01-B11B-3AFBF489582A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{000F13EE-DB38-40A5-A064-136FE176D4FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{000F13EE-DB38-40A5-A064-136FE176D4FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{000F13EE-DB38-40A5-A064-136FE176D4FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{000F13EE-DB38-40A5-A064-136FE176D4FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFECAFED-5B4C-434E-8462-39EF9F2F2EAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFECAFED-5B4C-434E-8462-39EF9F2F2EAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFECAFED-5B4C-434E-8462-39EF9F2F2EAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFECAFED-5B4C-434E-8462-39EF9F2F2EAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{791DDFC9-67BF-4295-8F45-B1792E4824D5}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{7150EA14-C7AD-44E8-A8CB-7E4F81E21DA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7150EA14-C7AD-44E8-A8CB-7E4F81E21DA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7150EA14-C7AD-44E8-A8CB-7E4F81E21DA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7150EA14-C7AD-44E8-A8CB-7E4F81E21DA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6025C8A7-49C5-4C79-8339-A2359C43B0B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6025C8A7-49C5-4C79-8339-A2359C43B0B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6025C8A7-49C5-4C79-8339-A2359C43B0B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6025C8A7-49C5-4C79-8339-A2359C43B0B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D86C13C2-A46F-4F01-B11B-3AFBF489582A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D86C13C2-A46F-4F01-B11B-3AFBF489582A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D86C13C2-A46F-4F01-B11B-3AFBF489582A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D86C13C2-A46F-4F01-B11B-3AFBF489582A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {48025F5C-925F-46B8-A850-4BFE7A038B52}
+	EndGlobalSection
+EndGlobal

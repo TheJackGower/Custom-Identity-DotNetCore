@@ -1,5 +1,5 @@
-﻿using IdentityManager.DAL;
-using IdentityManager.Entities.Custom;
+﻿using CustomNetCoreIdentity.Domain.Entities;
+using CustomNetCoreIdentity.Domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -18,50 +18,50 @@ namespace IdentityManager.Stores
                              IUserLoginStore<SiteUser>,
                              IQueryableUserStore<SiteUser>
     {
-        private UserService _userService { get; set; }
+        private ISiteUserRepository siteUserRepository { get; set; }
 
-        private RoleService _roleService { get; set; }
+        private ISiteRoleRepository _siteRoleRepository { get; set; }
 
-        private UserRoleService _userRoleService { get; set; }
+        private IUserRoleRepository _userRoleRepository { get; set; }
 
-        private ExternalLoginService _externalLoginService { get; set; }
+        private IExternalLoginRepository _externalLoginRepository { get; set; }
 
-        public UserStore(UserService userService, RoleService roleService, UserRoleService userRoleService, ExternalLoginService externalLoginService)
+        public UserStore(ISiteUserRepository siteUserRepository, ISiteRoleRepository siteRoleRepository, IUserRoleRepository userRoleRepository, IExternalLoginRepository externalLoginRepository)
         {
-            _userService = userService;
-            _roleService = roleService;
-            _externalLoginService = externalLoginService;
-            _userRoleService = userRoleService;
+            this.siteUserRepository = siteUserRepository;
+            _siteRoleRepository = siteRoleRepository;
+            _externalLoginRepository = externalLoginRepository;
+            _userRoleRepository = userRoleRepository;
         }
 
-        public IQueryable<SiteUser> Users => _userService.GetUserList();
+        public IQueryable<SiteUser> Users => siteUserRepository.GetUserList();
 
         public async Task<IdentityResult> CreateAsync(SiteUser user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.CreateUser(user, cancellationToken);
+            return await siteUserRepository.CreateUser(user, cancellationToken);
         }
 
         public async Task<IdentityResult> DeleteAsync(SiteUser user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.DeleteUser(user, cancellationToken);
+            return await siteUserRepository.DeleteUser(user, cancellationToken);
         }
 
         public async Task<SiteUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.FindById(userId, cancellationToken);
+            return await siteUserRepository.FindById(userId, cancellationToken);
         }
 
         public async Task<SiteUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.FindByName(normalizedUserName, cancellationToken);
+            return await siteUserRepository.FindByName(normalizedUserName, cancellationToken);
         }
 
         public Task<string> GetNormalizedUserNameAsync(SiteUser user, CancellationToken cancellationToken)
@@ -95,7 +95,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.UpdateUser(user, cancellationToken);
+            return await siteUserRepository.UpdateUser(user, cancellationToken);
         }
 
         public Task SetEmailAsync(SiteUser user, string email, CancellationToken cancellationToken)
@@ -124,7 +124,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userService.FindByEmail(normalizedEmail, cancellationToken);
+            return await siteUserRepository.FindByEmail(normalizedEmail, cancellationToken);
         }
 
         public Task<string> GetNormalizedEmailAsync(SiteUser user, CancellationToken cancellationToken)
@@ -182,7 +182,7 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
+            var role = await _siteRoleRepository.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
             if (role == null)
             {
@@ -192,7 +192,7 @@ namespace IdentityManager.Stores
                 throw new Exception("No Role Found by Name!");
             }
 
-            await _userRoleService.AddUserToRoleAsync(user.Id, role.Id, cancellationToken);
+            await _userRoleRepository.AddUserToRoleAsync(user.Id, role.Id, cancellationToken);
         }
 
         public async Task RemoveFromRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
@@ -200,21 +200,21 @@ namespace IdentityManager.Stores
             cancellationToken.ThrowIfCancellationRequested();
 
             // Retrieve role to get id
-            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
+            var role = await _siteRoleRepository.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
             if (role == null)
             {
                 throw new Exception($"Couldn't retrieve role with name - {role}");
             }
 
-            await _userRoleService.RemoveUserFromRole(user.Id, role.Id, cancellationToken);
+            await _userRoleRepository.RemoveUserFromRole(user.Id, role.Id, cancellationToken);
         }
 
         public async Task<IList<string>> GetRolesAsync(SiteUser user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _roleService.GetRolesByUserIdAsync(user, cancellationToken);
+            return await _siteRoleRepository.GetRolesByUserIdAsync(user, cancellationToken);
         }
 
         public async Task<bool> IsInRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
@@ -222,21 +222,21 @@ namespace IdentityManager.Stores
             cancellationToken.ThrowIfCancellationRequested();
 
             // Retrieve role to get id
-            var role = await _roleService.FindByNameAsync(roleName.ToUpper(), cancellationToken);
+            var role = await _siteRoleRepository.FindByNameAsync(roleName.ToUpper(), cancellationToken);
 
             if (role == null)
             {
                 return false;
             }
 
-            return await _userRoleService.IsUserInRoleAsync(user.Id, role.Id, cancellationToken);
+            return await _userRoleRepository.IsUserInRoleAsync(user.Id, role.Id, cancellationToken);
         }
 
         public async Task<IList<SiteUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _userRoleService.GetUsersInRoleAsync(roleName.ToUpper(), cancellationToken);
+            return await _userRoleRepository.GetUsersInRoleAsync(roleName.ToUpper(), cancellationToken);
         }
 
         #endregion
@@ -247,21 +247,21 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await _externalLoginService.CreateExternalLoginUser(user, login, cancellationToken);
+            await _externalLoginRepository.CreateExternalLoginUser(user, login, cancellationToken);
         }
 
         public async Task<SiteUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            int UserId = await _externalLoginService.GetUserIdByLoginProvider(loginProvider, providerKey, cancellationToken);
+            int UserId = await _externalLoginRepository.GetUserIdByLoginProvider(loginProvider, providerKey, cancellationToken);
 
             if (UserId == 0)
             {
                 return null;
             }
 
-            return await _userService.FindById(UserId.ToString(), cancellationToken);
+            return await siteUserRepository.FindById(UserId.ToString(), cancellationToken);
         }
 
         public Task<IList<UserLoginInfo>> GetLoginsAsync(SiteUser user, CancellationToken cancellationToken)

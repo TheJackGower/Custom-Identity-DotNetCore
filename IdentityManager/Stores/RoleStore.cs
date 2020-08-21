@@ -1,5 +1,5 @@
-﻿using IdentityManager.DAL;
-using IdentityManager.Entities.Custom;
+﻿using CustomNetCoreIdentity.Domain.Entities;
+using CustomNetCoreIdentity.Domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Identity;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,32 +8,32 @@ namespace IdentityManager.Stores
 {
     public class RoleStore : IRoleStore<SiteRole>
     {
-        private RoleService _roleService { get; set; }
+        private ISiteRoleRepository _siteRoleRepository { get; set; }
 
-        public RoleStore(RoleService roleService)
+        public RoleStore(ISiteRoleRepository siteRoleRepository)
         {
-            _roleService = roleService;
+            _siteRoleRepository = siteRoleRepository;
         }
 
         public async Task<IdentityResult> CreateAsync(SiteRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _roleService.CreateAsync(role, cancellationToken);
+            return await _siteRoleRepository.CreateAsync(role, cancellationToken);
         }
 
         public async Task<IdentityResult> UpdateAsync(SiteRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _roleService.UpdateAsync(role, cancellationToken);
+            return await _siteRoleRepository.UpdateAsync(role, cancellationToken);
         }
 
         public async Task<IdentityResult> DeleteAsync(SiteRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _roleService.DeleteAsync(role, cancellationToken);
+            return await _siteRoleRepository.DeleteAsync(role, cancellationToken);
         }
 
         public Task<string> GetRoleIdAsync(SiteRole role, CancellationToken cancellationToken)
@@ -67,13 +67,13 @@ namespace IdentityManager.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await _roleService.FindByIdAsync(roleId, cancellationToken);
+            return await _siteRoleRepository.FindByIdAsync(roleId, cancellationToken);
         }
 
         public async Task<SiteRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _roleService.FindByNameAsync(normalizedRoleName, cancellationToken);
+            return await _siteRoleRepository.FindByNameAsync(normalizedRoleName, cancellationToken);
         }
 
         public void Dispose()
