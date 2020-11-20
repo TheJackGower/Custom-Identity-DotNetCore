@@ -31,7 +31,7 @@ namespace CustomNetCoreIdentity.Infrastructure
                     .AddDefaultTokenProviders();
 
             // Add application services.
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddTransient<IEmailService, EmailService>();
         }
     }
 }

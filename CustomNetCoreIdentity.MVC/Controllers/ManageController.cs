@@ -7,12 +7,11 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using CustomNetCoreIdentity.MVC.ViewModels.ManageViewModels;
 using CustomNetCoreIdentity.MVC.Services;
-using CustomNetCoreIdentity.Application;
 using CustomNetCoreIdentity.Application.Services;
 using CustomNetCoreIdentity.Domain.Entities;
+using Serilog;
 
 namespace CustomNetCoreIdentity.MVC.Controllers
 {
@@ -22,8 +21,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
     {
         private readonly UserManager<SiteUser> _userManager;
         private readonly SignInManager<SiteUser> _signInManager;
-        private readonly IEmailSender _emailSender;
-        private readonly ILogger _logger;
+        private readonly IEmailService _emailService;
         private readonly UrlEncoder _urlEncoder;
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
@@ -31,14 +29,12 @@ namespace CustomNetCoreIdentity.MVC.Controllers
         public ManageController(
           UserManager<SiteUser> userManager,
           SignInManager<SiteUser> signInManager,
-          IEmailSender emailSender,
-          ILogger<ManageController> logger,
+          IEmailService emailService,
           UrlEncoder urlEncoder)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
-            _logger = logger;
+            _emailService = emailService;
             _urlEncoder = urlEncoder;
         }
 
@@ -131,7 +127,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
             var email = user.Email;
-            await _emailSender.SendEmailConfirmationAsync(email, callbackUrl);
+            await _emailService.SendEmailConfirmationAsync(email, callbackUrl);
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Index));
@@ -179,7 +175,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            _logger.LogInformation("User changed their password successfully.");
+            Log.Logger.Information("User changed their password successfully.");
             StatusMessage = "Your password has been changed.";
 
             return RedirectToAction(nameof(ChangePassword));
@@ -366,7 +362,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
                 throw new ApplicationException($"Unexpected error occured disabling 2FA for user with ID '{user.Id}'.");
             }
 
-            _logger.LogInformation("User with ID {UserId} has disabled 2fa.", user.Id);
+            Log.Logger.Information("User with ID {UserId} has disabled 2fa.", user.Id);
             return RedirectToAction(nameof(TwoFactorAuthentication));
         }
 
@@ -423,7 +419,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
-            _logger.LogInformation("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
+            Log.Logger.Information("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
             return RedirectToAction(nameof(GenerateRecoveryCodes));
         }
 
@@ -445,7 +441,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
 
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
-            _logger.LogInformation("User with id '{UserId}' has reset their authentication app key.", user.Id);
+            Log.Logger.Information("User with id '{UserId}' has reset their authentication app key.", user.Id);
 
             return RedirectToAction(nameof(EnableAuthenticator));
         }
@@ -467,21 +463,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes.ToArray() };
 
-            _logger.LogInformation("User with ID {UserId} has generated new 2FA recovery codes.", user.Id);
-
-            return View(model);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> UserList()
-        {
-            var list = _userManager.Users.ToList();
-
-            var model = new UserListViewModel
-            {
-                List = list,
-                Count = list.Count
-            };
+            Log.Logger.Information("User with ID {UserId} has generated new 2FA recovery codes.", user.Id);
 
             return View(model);
         }
@@ -515,11 +497,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
 
         private string GenerateQrCodeUri(string email, string unformattedKey)
         {
-            return string.Format(
-                AuthenicatorUriFormat,
-                _urlEncoder.Encode("WebApp"),
-                _urlEncoder.Encode(email),
-                unformattedKey);
+            return string.Format(AuthenicatorUriFormat, _urlEncoder.Encode("WebApp"), _urlEncoder.Encode(email), unformattedKey);
         }
 
         #endregion

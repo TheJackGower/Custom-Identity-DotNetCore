@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Linq;
+using Serilog;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using CustomNetCoreIdentity.MVC.ViewModels.AccountViewModels;
 using CustomNetCoreIdentity.MVC.Services;
 using CustomNetCoreIdentity.Domain.Entities;
 using CustomNetCoreIdentity.Application.Services;
+using CustomNetCoreIdentity.Infrastructure.Extensions;
 
 namespace CustomNetCoreIdentity.MVC.Controllers
 {
@@ -19,23 +21,19 @@ namespace CustomNetCoreIdentity.MVC.Controllers
     {
         private readonly UserManager<SiteUser> _userManager;
         private readonly SignInManager<SiteUser> _signInManager;
-        private readonly IEmailSender _emailSender;
-        private readonly ILogger _logger;
+        private readonly IEmailService _emailService;
 
-        public AccountController(
-            UserManager<SiteUser> userManager,
-            SignInManager<SiteUser> signInManager,
-            IEmailSender emailSender,
-            ILogger<AccountController> logger)
+        public AccountController(UserManager<SiteUser> userManager, SignInManager<SiteUser> signInManager, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
-            _logger = logger;
+            _emailService = emailService;
         }
 
         [TempData]
         public string ErrorMessage { get; set; }
+
+        #region Login
 
         [HttpGet]
         [AllowAnonymous]
@@ -43,6 +41,8 @@ namespace CustomNetCoreIdentity.MVC.Controllers
         {
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            ClearCookies();
 
             ViewData["ReturnUrl"] = returnUrl;
             return View();
@@ -61,8 +61,9 @@ namespace CustomNetCoreIdentity.MVC.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return RedirectToLocal(returnUrl);
+                    Log.Logger.Information("User logged in.");
+
+                    return RedirectToAction(nameof(HomeController.Index), "Home");
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -70,7 +71,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    Log.Logger.Warning("User account locked out.");
                     return RedirectToAction(nameof(Lockout));
                 }
                 else
@@ -124,17 +125,17 @@ namespace CustomNetCoreIdentity.MVC.Controllers
 
             if (result.Succeeded)
             {
-                _logger.LogInformation("User with ID {UserId} logged in with 2fa.", user.Id);
+                Log.Logger.Information("User with ID {UserId} logged in with 2fa.", user.Id);
                 return RedirectToLocal(returnUrl);
             }
             else if (result.IsLockedOut)
             {
-                _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
+                Log.Logger.Warning("User with ID {UserId} account locked out.", user.Id);
                 return RedirectToAction(nameof(Lockout));
             }
             else
             {
-                _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
+                Log.Logger.Warning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
                 return View();
             }
@@ -178,28 +179,68 @@ namespace CustomNetCoreIdentity.MVC.Controllers
 
             if (result.Succeeded)
             {
-                _logger.LogInformation("User with ID {UserId} logged in with a recovery code.", user.Id);
+                Log.Logger.Information("User with ID {UserId} logged in with a recovery code.", user.Id);
                 return RedirectToLocal(returnUrl);
             }
             if (result.IsLockedOut)
             {
-                _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
+                Log.Logger.Warning("User with ID {UserId} account locked out.", user.Id);
                 return RedirectToAction(nameof(Lockout));
             }
             else
             {
-                _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
+                Log.Logger.Warning("Invalid recovery code entered for user with ID {UserId}", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
                 return View();
             }
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Lockout()
+        #endregion
+
+        #region Impersonate User
+
+        //[Authorize(Roles = "Admin")] // <-- Make sure only admins can access this 
+        public async Task<IActionResult> ImpersonateUser(string userId)
         {
-            return View();
+            var currentUserId = User.GetUserId();
+
+            var impersonatedUser = await _userManager.FindByIdAsync(userId);
+
+            var userPrincipal = await _signInManager.CreateUserPrincipalAsync(impersonatedUser);
+
+            userPrincipal.Identities.First().AddClaim(new Claim("OriginalUserId", currentUserId));
+            userPrincipal.Identities.First().AddClaim(new Claim("IsImpersonating", "true"));
+
+            // sign out the current user
+            await _signInManager.SignOutAsync();
+
+            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, userPrincipal); // <-- This has changed from the previous version.
+
+            return RedirectToAction("Index", "Home");
         }
+
+        [Authorize]
+        public async Task<IActionResult> StopImpersonation()
+        {
+            if (!User.IsImpersonating())
+            {
+                throw new Exception("You are not impersonating now. Can't stop impersonation");
+            }
+
+            var originalUserId = User.FindFirst("OriginalUserId").Value;
+
+            var originalUser = await _userManager.FindByIdAsync(originalUserId);
+
+            await _signInManager.SignOutAsync();
+
+            await _signInManager.SignInAsync(originalUser, isPersistent: true);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        #endregion
+
+        #region Register
 
         [HttpGet]
         [AllowAnonymous]
@@ -217,20 +258,26 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new SiteUser { Username = model.Email, Email = model.Email };
+                var user = new SiteUser
+                {
+                    Username = model.Email,
+                    Email = model.Email
+                };
+
                 var result = await _userManager.CreateAsync(user, model.Password);
+
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    Log.Logger.Information("User created a new account with password.");
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-                    await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
+                    await _emailService.SendEmailConfirmationAsync(model.Email, callbackUrl);
 
-                    await _userManager.AddToRoleAsync(user, "Member");
+                    await _userManager.AddToRoleAsync(user, "Admin");
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    _logger.LogInformation("User created a new account with password.");
+                    Log.Logger.Information("User created a new account with password.");
                     return RedirectToLocal(returnUrl);
                 }
                 AddErrors(result);
@@ -240,104 +287,37 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             return View(model);
         }
 
+        #endregion
+
+        #region Deny Views
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Lockout()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        #endregion
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            // Sign Out
             await _signInManager.SignOutAsync();
-            _logger.LogInformation("User logged out.");
-            return RedirectToAction(nameof(HomeController.Index), "Home");
-        }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public IActionResult ExternalLogin(string provider, string returnUrl = null)
-        {
-            // Request a redirect to the external login provider.
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-            return Challenge(properties, provider);
-        }
+            // Clear all cookies
+            ClearCookies();
 
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
-        {
-            if (remoteError != null)
-            {
-                ErrorMessage = $"Error from external provider: {remoteError}";
-                return RedirectToAction(nameof(Login));
-            }
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-            {
-                return RedirectToAction(nameof(Login));
-            }
-
-            // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
-            {
-                _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
-                return RedirectToLocal(returnUrl);
-            }
-            if (result.IsLockedOut)
-            {
-                return RedirectToAction(nameof(Lockout));
-            }
-            else
-            {
-                // If the user does not have an account, then ask the user to create an account.
-                ViewData["ReturnUrl"] = returnUrl;
-                ViewData["LoginProvider"] = info.LoginProvider;
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLogin", new ExternalLoginViewModel { Email = email });
-            }
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model, string returnUrl = null)
-        {
-            if (ModelState.IsValid)
-            {
-                // Get the information about the user from the external login provider
-                var info = await _signInManager.GetExternalLoginInfoAsync();
-                if (info == null)
-                {
-                    throw new ApplicationException("Error loading external login information during confirmation.");
-                }
-
-                // create app user with external login info
-                var user = new SiteUser { Username = model.Email, Email = model.Email, Forename = model.FirstName, Surname = model.Surname };
-                var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    // Refresh User
-                    user = await _userManager.FindByEmailAsync(user.NormalizedEmail);
-
-                    // Add to external login table for reference
-                    result = await _userManager.AddLoginAsync(user, info);
-                    if (result.Succeeded)
-                    {
-                        // Add to role
-                        result = await _userManager.AddToRoleAsync(user, "Member");
-
-                        if (result.Succeeded)
-                        {
-                            await _signInManager.SignInAsync(user, isPersistent: false);
-                            _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                            return RedirectToLocal(returnUrl);
-                        }
-                    }
-                }
-                AddErrors(result);
-            }
-
-            ViewData["ReturnUrl"] = returnUrl;
-            return View(nameof(ExternalLogin), model);
+            Log.Logger.Information("User logged out.");
+            return RedirectToAction(nameof(Login), "Account");
         }
 
         [HttpGet]
@@ -356,6 +336,8 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             var result = await _userManager.ConfirmEmailAsync(user, code);
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
         }
+
+        #region Password
 
         [HttpGet]
         [AllowAnonymous]
@@ -382,7 +364,7 @@ namespace CustomNetCoreIdentity.MVC.Controllers
                 // visit https://go.microsoft.com/fwlink/?LinkID=532713
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
-                await _emailSender.SendEmailAsync(model.Email, "Reset Password",
+                await _emailService.SendEmailAsync(model.Email, "Reset Password",
                    $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
@@ -441,14 +423,17 @@ namespace CustomNetCoreIdentity.MVC.Controllers
             return View();
         }
 
-
-        [HttpGet]
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
+        #endregion
 
         #region Helpers
+
+        private void ClearCookies()
+        {
+            foreach (var cookie in Request.Cookies.Keys)
+            {
+                Response.Cookies.Delete(cookie);
+            }
+        }
 
         private void AddErrors(IdentityResult result)
         {
