@@ -1,10 +1,11 @@
-﻿using CustomNetCoreIdentity.Domain.Entities;
-using CustomNetCoreIdentity.Domain.Interfaces.Repositories;
-using Microsoft.AspNetCore.Identity;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CustomNetCoreIdentity.Domain.Entities;
+using CustomNetCoreIdentity.Domain.Interfaces.Repositories;
+using Microsoft.AspNetCore.Identity;
 
-namespace IdentityManager.Stores
+namespace CustomNetCoreIdentity.Stores
 {
     public class RoleStore : IRoleStore<SiteRole>
     {
@@ -78,7 +79,19 @@ namespace IdentityManager.Stores
 
         public void Dispose()
         {
-            // Nothing to dispose.
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (this != null)
+                {
+                    //this.Dispose();
+                }
+            }
         }
     }
 }

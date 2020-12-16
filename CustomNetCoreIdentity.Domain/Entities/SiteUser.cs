@@ -45,5 +45,7 @@ namespace CustomNetCoreIdentity.Domain.Entities
         public string Instagram { get; set; }
 
         public string Website { get; set; }
+
+        public string SecurityStamp { get; set; }
     }
 }

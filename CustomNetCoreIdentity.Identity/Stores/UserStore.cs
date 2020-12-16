@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IdentityManager.Stores
+namespace CustomNetCoreIdentity.Stores
 {
     public class UserStore : IUserStore<SiteUser>,
                              IUserEmailStore<SiteUser>,
@@ -171,11 +171,6 @@ namespace IdentityManager.Stores
             return Task.FromResult(user.TwoFactorEnabled);
         }
 
-        public void Dispose()
-        {
-            // Nothing to dispose.
-        }
-
         #region Roles
 
         public async Task AddToRoleAsync(SiteUser user, string roleName, CancellationToken cancellationToken)
@@ -264,15 +259,22 @@ namespace IdentityManager.Stores
             return await siteUserRepository.FindById(UserId.ToString(), cancellationToken);
         }
 
-        public Task<IList<UserLoginInfo>> GetLoginsAsync(SiteUser user, CancellationToken cancellationToken)
+        public async Task<IList<UserLoginInfo>> GetLoginsAsync(SiteUser user, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await _externalLoginRepository.ListForUserId(user, cancellationToken);
         }
 
-        public Task RemoveLoginAsync(SiteUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public async Task RemoveLoginAsync(SiteUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
-            // Should be called when deleting a user that was created from an external source
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (user == null)
+            {
+                throw new ArgumentNullException("user");
+            }
+
+            // Called when deleting a user that was created from an external source
+            await _externalLoginRepository.RemoveLogin(user, loginProvider, providerKey, cancellationToken);
         }
 
         #endregion
@@ -296,6 +298,48 @@ namespace IdentityManager.Stores
         }
 
         #endregion
+
+        #region Security stamp
+        public virtual Task<string> GetSecurityStampAsync(SiteUser user)
+        {
+            if (user == null)
+            {
+                throw new ArgumentNullException("user");
+            }
+
+            return Task.FromResult(user.SecurityStamp);
+        }
+
+        public virtual Task SetSecurityStampAsync(SiteUser user, string stamp)
+        {
+            if (user == null)
+            {
+                throw new ArgumentNullException("user");
+            }
+
+            user.SecurityStamp = stamp;
+
+            return Task.FromResult(0);
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (this != null)
+                {
+                    //this.Dispose();
+                }
+            }
+        }
 
     }
 }

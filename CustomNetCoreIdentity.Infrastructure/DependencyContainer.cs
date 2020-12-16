@@ -2,7 +2,7 @@
 using CustomNetCoreIdentity.Domain.Entities;
 using CustomNetCoreIdentity.Domain.Interfaces.Repositories;
 using CustomNetCoreIdentity.Infrastructure.Repositories;
-using IdentityManager.Stores;
+using CustomNetCoreIdentity.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
